@@ -105,7 +105,7 @@ svg { width: 100%; height: 100%; }
 <body>
 <header>
   <h1>Philosophical Lineages</h1>
-  <span>31 philosophers · organised by era · click any node to trace influence · scroll to zoom · drag to pan</span>
+  <span>38 philosophers · organised by era · click any node to trace influence · scroll to zoom · drag to pan</span>
 </header>
 <div id="main">
   <div id="graph-container">
@@ -119,12 +119,15 @@ svg { width: 100%; height: 100%; }
 <script>
 const T = {
   "Ancient":               { c:"#9a6e10", bg:"#f5e8c8" },
+  "Scholasticism":         { c:"#786020", bg:"#f0e8cc" },
   "Rationalism":           { c:"#4455b0", bg:"#dde2f5" },
   "Empiricism":            { c:"#2860a0", bg:"#d5e5f5" },
+  "Social Contract":       { c:"#2a6088", bg:"#cce0f0" },
   "German Idealism":       { c:"#6638a8", bg:"#ead8f5" },
   "Pessimism":             { c:"#785040", bg:"#f0e4dc" },
   "Materialism":           { c:"#a05018", bg:"#f5e0cc" },
   "Marxism":               { c:"#982820", bg:"#f5d5d0" },
+  "Utilitarianism":        { c:"#3a7028", bg:"#d0e8c8" },
   "Proto-Existentialism":  { c:"#a06818", bg:"#f5e8cc" },
   "Pragmatism":            { c:"#286840", bg:"#d0f0dd" },
   "Analytic":              { c:"#1868a0", bg:"#cce5f5" },
@@ -134,22 +137,27 @@ const T = {
   "Critical Theory":       { c:"#902848", bg:"#f5cedd" },
   "Political":             { c:"#506030", bg:"#e2ecc8" },
   "Post-structuralism":    { c:"#7030a0", bg:"#e8ccf5" },
+  "Liberalism":            { c:"#387068", bg:"#cce8e0" },
 };
 
 const COLS = [
-  { name:"Ancient",            period:"c. 428–322 BCE", band:"rgba(180,140,60,.10)"  },
-  { name:"Early Modern",       period:"1596–1660",       band:"rgba(80,100,200,.08)"  },
-  { name:"Enlightenment",      period:"1711–1790",       band:"rgba(120,80,200,.09)"  },
-  { name:"German Idealism",    period:"1762–1831",       band:"rgba(100,55,180,.10)"  },
-  { name:"19th Century",       period:"1804–1820",       band:"rgba(180,70,55,.08)"   },
-  { name:"Late 19th",          period:"1839–1875",       band:"rgba(55,150,110,.08)"  },
-  { name:"Turn of Century",    period:"1872–1910",       band:"rgba(50,120,190,.08)"  },
-  { name:"Existentialist Era", period:"1903–1910",       band:"rgba(35,140,120,.09)"  },
-  { name:"Post-structuralism", period:"1926–1930",       band:"rgba(150,55,180,.10)"  },
+  { name:"Ancient & Medieval", period:"c. 470 BCE–1274",  band:"rgba(180,140,60,.10)"  },
+  { name:"Early Modern",       period:"1588–1704",         band:"rgba(80,100,200,.08)"  },
+  { name:"Enlightenment",      period:"1711–1790",         band:"rgba(120,80,200,.09)"  },
+  { name:"German Idealism",    period:"1762–1831",         band:"rgba(100,55,180,.10)"  },
+  { name:"19th Century",       period:"1804–1883",         band:"rgba(180,70,55,.08)"   },
+  { name:"Late 19th",          period:"1839–1875",         band:"rgba(55,150,110,.08)"  },
+  { name:"Turn of Century",    period:"1872–1910",         band:"rgba(50,120,190,.08)"  },
+  { name:"Existentialist Era", period:"1903–1910",         band:"rgba(35,140,120,.09)"  },
+  { name:"Post-structuralism", period:"1921–1930",         band:"rgba(150,55,180,.10)"  },
 ];
 
 const P = [
-  // col 0 — Ancient
+  // col 0 — Ancient & Medieval
+  { id:"socrates", name:"Socrates", years:"c. 470–399 BCE", col:0, tradition:"Ancient",
+    bio:"Socrates wrote nothing himself; through Plato's dialogues his relentless questioning became the template for Western philosophy. He claimed wisdom begins in recognising one's own ignorance.",
+    concepts:["Elenchus — Socratic cross-examination","Knowing one's ignorance as wisdom","Virtue is knowledge — evil is ignorance","Care of the soul over the body","Philosophy as preparation for death","\"The unexamined life is not worth living\""] },
+
   { id:"plato", name:"Plato", years:"c. 428–348 BCE", col:0, tradition:"Ancient",
     bio:"Plato's theory of Forms posited an eternal realm of perfect archetypes behind appearances. Through Socratic dialogue and dialectic he set the template for Western rationalism.",
     concepts:["Theory of Forms — eternal archetypes behind appearances","Dialectical method (Socratic dialogue)","Allegory of the cave — knowledge as ascent","The tripartite soul","The Republic — philosopher-kings","Eros and the ascent to Beauty"] },
@@ -158,7 +166,15 @@ const P = [
     bio:"Aristotle grounded Plato's idealism in observable nature. Form is inseparable from matter; logic, ethics, and biology flow from careful observation of the world.",
     concepts:["Hylomorphism — form inseparable from matter","Predicate logic / syllogism","Teleology — things aim at their end","Virtue ethics and the golden mean","Empirical observation as method","Categories of being"] },
 
+  { id:"aquinas", name:"Aquinas", years:"1225–1274", col:0, tradition:"Scholasticism",
+    bio:"Aquinas reconciled Aristotle's philosophy with Christian theology, arguing faith and reason are complementary. His natural law theory became the enduring foundation of Catholic moral and political thought.",
+    concepts:["Synthesis of Aristotle and Christian theology","Five Ways — arguments for God's existence","Natural law — reason discerning moral order","Faith and reason as complementary, not opposed","Analogy of being (analogia entis)","Real distinction between essence and existence"] },
+
   // col 1 — Early Modern
+  { id:"hobbes", name:"Hobbes", years:"1588–1679", col:1, tradition:"Social Contract",
+    bio:"Hobbes argued that without a sovereign power, life would be 'solitary, poor, nasty, brutish, and short.' The social contract trades natural freedom for security under an absolute sovereign.",
+    concepts:["State of nature — war of all against all","Social contract and the Leviathan","Sovereignty as absolute and indivisible","Materialism — mind as motion in matter","Natural law as rational self-preservation","Civil peace over natural liberty"] },
+
   { id:"descartes", name:"Descartes", years:"1596–1650", col:1, tradition:"Rationalism",
     bio:"Descartes cleared the philosophical ground by doubting everything until he reached the indubitability of the thinking subject. His mind–body dualism set the agenda for modern philosophy of mind.",
     concepts:["Cogito ergo sum","Methodological doubt","Mind–body dualism (res cogitans / res extensa)","Innate ideas","The mechanical universe","Mathematical method in philosophy"] },
@@ -179,6 +195,10 @@ const P = [
   { id:"hume", name:"Hume", years:"1711–1776", col:2, tradition:"Empiricism",
     bio:"Hume pushed empiricism to its radical conclusion: cause and effect is a habit of mind, not a necessary feature of reality. There is no stable self — only a bundle of perceptions.",
     concepts:["Causal skepticism — custom not necessity","Bundle theory of the self","Problem of induction","Sentiment as foundation of ethics","Is–ought gap","Skepticism about metaphysics"] },
+
+  { id:"rousseau", name:"Rousseau", years:"1712–1778", col:2, tradition:"Social Contract",
+    bio:"Rousseau reversed Hobbes: natural man is good, society corrupts. Only a social contract that expresses the general will — not the sum of private interests — can reconcile freedom with political order.",
+    concepts:["The general will (volonté générale)","Natural goodness corrupted by society","Social contract as restoring freedom","Amour-propre — corrupted self-love vs. amour de soi","Inequality as a social construction","Education as natural unfolding (Emile)"] },
 
   { id:"wollstonecraft", name:"Wollstonecraft", years:"1759–1797", col:2, tradition:"Early Feminism",
     bio:"Wollstonecraft argued that women's apparent irrationality was the product of deficient education, not nature. A Vindication of the Rights of Woman applied Enlightenment reason to sex.",
@@ -205,10 +225,14 @@ const P = [
     bio:"Schopenhauer revealed behind Kant's noumenon a blind, insatiable Will. Life is suffering; redemption lies in aesthetic contemplation and the denial of will — a synthesis of Kant and Vedanta.",
     concepts:["World as Will and Representation","The Will as blind, unconscious striving","Pessimism — suffering as fundamental","Art (especially music) as temporary escape","Compassion as ethical foundation","Vedanta and Buddhist resonances"] },
 
-  // col 4 — 19th Century I
+  // col 4 — 19th Century
   { id:"feuerbach", name:"Feuerbach", years:"1804–1872", col:4, tradition:"Materialism",
     bio:"Feuerbach inverted Hegel: it is not Spirit that generates man but man who projects his highest qualities onto God. Theology is disguised anthropology — Marx's immediate predecessor.",
     concepts:["God as projection of human nature","Anthropological materialism","Species-being (Gattungswesen)","Sensuous materialism — the body as real","Critique of Hegel's abstraction","Religion as self-alienation"] },
+
+  { id:"mill", name:"J.S. Mill", years:"1806–1873", col:4, tradition:"Utilitarianism",
+    bio:"Mill refined Bentham's utilitarianism by distinguishing higher and lower pleasures, and defended individual liberty in On Liberty. The Subjection of Women extended liberal principles to the sexes.",
+    concepts:["Utilitarianism — greatest happiness of greatest number","Higher vs. lower pleasures","Harm principle — liberty as default","On Liberty — individual sovereignty","The Subjection of Women","Representative government"] },
 
   { id:"kierkegaard", name:"Kierkegaard", years:"1813–1855", col:4, tradition:"Proto-Existentialism",
     bio:"Kierkegaard rejected Hegel's totality: the most important truths are those I stake my life on. He mapped existence through aesthetic, ethical, and religious stages of selfhood.",
@@ -273,7 +297,15 @@ const P = [
     bio:"Where Sartre's subject is pure consciousness, Merleau-Ponty argued we are our bodies: perception is already a form of understanding, not raw data processed by a detached mind.",
     concepts:["The lived body as primary subject","Perception as being-in-the-world","Motor intentionality","Intercorporeality","The flesh (la chair)","Visible and invisible"] },
 
+  { id:"quine", name:"Quine", years:"1908–2000", col:7, tradition:"Analytic",
+    bio:"Quine dismantled the foundations of logical empiricism by attacking the analytic–synthetic distinction. Knowledge is a web of beliefs facing experience as a whole — no statement is immune to revision.",
+    concepts:["Two Dogmas of Empiricism — no analytic/synthetic distinction","Ontological relativity — 'to be is to be a value of a variable'","Naturalized epistemology","Indeterminacy of translation","Web of belief — holism","Word and Object — radical interpretation"] },
+
   // col 8 — Post-structuralism
+  { id:"rawls", name:"Rawls", years:"1921–2002", col:8, tradition:"Liberalism",
+    bio:"Rawls revived political philosophy with A Theory of Justice (1971), arguing that just principles are those chosen from behind a 'veil of ignorance' — not knowing one's place in society.",
+    concepts:["Veil of ignorance — original position","Two principles: equal liberty and difference principle","Justice as fairness","Kantian constructivism","Overlapping consensus (Political Liberalism)","Primary goods as currency of justice"] },
+
   { id:"foucault", name:"Foucault", years:"1926–1984", col:8, tradition:"Post-structuralism",
     bio:"Foucault used Nietzschean genealogy to expose how power produces knowledge, normality, and the subject itself. The prison, the clinic, and sexuality are all sites where discourse disciplines bodies.",
     concepts:["Genealogy of knowledge–power","Discourse and discursive formations","Biopower / biopolitics","Discipline and Punish","History of Sexuality","The episteme"] },
@@ -284,53 +316,92 @@ const P = [
 ];
 
 const INF = [
-  { s:"plato",        t:"aristotle",    concept:"Forms → substance",              detail:"Aristotle grounds Plato's transcendent Forms in concrete substances — form is inseparable from matter, not floating in a separate realm." },
-  { s:"plato",        t:"hegel",        concept:"Dialectics / the Idea",          detail:"Hegel reads Plato as the first dialectician; the Platonic Idea becomes the Absolute Idea that drives the Logic." },
-  { s:"aristotle",    t:"hegel",        concept:"Logic / teleology",              detail:"Hegel works through Aristotelian logic and teleology, transforming them into a historical, dialectical movement of Spirit." },
-  { s:"descartes",    t:"spinoza",      concept:"Substance dualism → monism",     detail:"Spinoza adopts Descartes's rationalist method and substance vocabulary, then collapses the two substances into one infinite God-Nature." },
-  { s:"descartes",    t:"leibniz",      concept:"Rationalist method",             detail:"Leibniz develops the Cartesian rationalist programme but replaces dualism with monads and pre-established harmony." },
-  { s:"descartes",    t:"kant",         concept:"Problem of knowledge",           detail:"Kant takes the Cartesian problem of how the subject knows the object and resolves it by making the subject the legislator of nature's laws." },
-  { s:"spinoza",      t:"hegel",        concept:"Substance as the Whole",         detail:"Hegel declares the Absolute must be understood as Substance and as Subject — he acknowledges Spinoza's achievement and transforms it." },
-  { s:"locke",        t:"hume",         concept:"Empiricist tradition",           detail:"Hume inherits Locke's empiricism and radicalises it: if all ideas come from experience, causal necessity cannot be known." },
-  { s:"leibniz",      t:"kant",         concept:"Space, time, rationalism",       detail:"Kant reacts against Leibniz's view that space and time are concepts by making them pure forms of intuition." },
-  { s:"hume",         t:"kant",         concept:"Problem of causation",           detail:"Hume's skepticism about causation woke Kant from his 'dogmatic slumber' and drove the entire critical project." },
-  { s:"wollstonecraft",t:"beauvoir",    concept:"Women's rational agency",        detail:"Beauvoir's argument that women's oppression is constructed, not natural, draws directly on Wollstonecraft's application of Enlightenment reason to sex." },
-  { s:"kant",         t:"hegel",        concept:"Transcendental idealism",        detail:"Hegel absorbs Kant's subject/object distinction into a dialectical movement that overcomes it from within, dissolving the thing-in-itself." },
-  { s:"kant",         t:"beauvoir",     concept:"Autonomy (critiqued)",           detail:"Beauvoir adopts Kantian autonomy but shows it was tacitly male — real autonomy must account for the situated, embodied subject." },
-  { s:"fichte",       t:"hegel",        concept:"Absolute I / dialectical subject",detail:"Fichte's self-positing I and the thesis-antithesis-synthesis structure enter Hegel's Phenomenology as the dialectic of Spirit's self-development." },
-  { s:"schelling",    t:"hegel",        concept:"Nature as Spirit / Absolute",    detail:"Schelling's identity philosophy — Nature and Mind as two sides of the Absolute — informs Hegel's early development before Hegel breaks with it." },
-  { s:"hegel",        t:"marx",         concept:"Dialectics (materialised)",      detail:"Marx keeps Hegel's dialectic but materialises it: not Spirit but economic contradictions drive historical change." },
-  { s:"hegel",        t:"kierkegaard",  concept:"The System (rejected)",          detail:"Kierkegaard builds existentialism as a protest against Hegel's absorption of the concrete individual into the logical Absolute." },
-  { s:"hegel",        t:"sartre",       concept:"Master–Slave / recognition",     detail:"Sartre's 'Look' — in which I become an object for the Other — directly transforms Hegel's master-slave struggle for recognition." },
-  { s:"hegel",        t:"beauvoir",     concept:"The Other / Anerkennung",        detail:"Beauvoir's central insight: 'Woman' is Hegel's absolute Other — denied the reciprocal recognition that would grant her subjecthood." },
-  { s:"hegel",        t:"adorno",       concept:"Dialectics (negated)",           detail:"Adorno inherits the dialectic but refuses its positive resolution. 'Negative dialectics' is a permanent critique that resists any synthesis." },
-  { s:"hegel",        t:"foucault",     concept:"History / power dialectics",     detail:"Foucault's genealogies borrow the idea of historically constituted subjects from Hegel while rejecting any teleological reconciliation." },
-  { s:"schopenhauer", t:"nietzsche",    concept:"Will (transformed)",             detail:"Nietzsche takes Schopenhauer's blind Will, strips away its Buddhist resignation, and transforms it into the affirmative will to power." },
-  { s:"schopenhauer", t:"wittgenstein", concept:"Limits of language / mystical",  detail:"Wittgenstein's Tractatus ends where Schopenhauer does: what matters most — ethics, the mystical — cannot be said, only shown." },
-  { s:"feuerbach",    t:"marx",         concept:"Anthropological materialism",    detail:"Feuerbach showed religion is human self-alienation. Marx extends this to labour: workers are alienated from their species-being under capitalism." },
-  { s:"marx",         t:"adorno",       concept:"Historical materialism",         detail:"Frankfurt School Critical Theory fuses Marx with Weber and Freud to analyse why the working class fails to recognise its own interests." },
-  { s:"kierkegaard",  t:"heidegger",    concept:"Authenticity / anxiety",         detail:"Heidegger's authentic Dasein — owning one's thrownness in the face of death — is a secularisation of Kierkegaard's individual before God." },
-  { s:"kierkegaard",  t:"sartre",       concept:"Subjective truth / anxiety",     detail:"Sartre's radical freedom and existential 'nausea' inherit Kierkegaard's insistence on inward, subjective certainty over the System." },
-  { s:"nietzsche",    t:"heidegger",    concept:"Destruction of metaphysics",     detail:"Heidegger's Destruktion of the Western tradition directly continues Nietzsche's genealogical critique of Platonism and Christian morality." },
-  { s:"nietzsche",    t:"sartre",       concept:"Values as created",              detail:"Sartre's 'existence precedes essence' echoes Nietzsche's insistence that values are made, not discovered — the self is always a project." },
-  { s:"nietzsche",    t:"foucault",     concept:"Genealogy / power–knowledge",    detail:"Foucault's genealogical method is explicitly Nietzschean: expose the power interests concealed in claims to truth, normality, or health." },
-  { s:"nietzsche",    t:"derrida",      concept:"Perspectivism / trace",          detail:"Derrida's différance — meaning always deferred, never fully present — echoes Nietzsche's perspectivism: there is no unmediated access to truth." },
-  { s:"frege",        t:"russell",      concept:"Mathematical logic",             detail:"Russell builds on Frege's predicate logic; he discovers the set-theoretic paradox that forces a revision of Frege's original system." },
-  { s:"frege",        t:"wittgenstein", concept:"Language and logic",             detail:"Wittgenstein inherits Frege's anti-psychologism and the view that logical structure determines meaning — then radically rethinks both." },
-  { s:"james",        t:"bergson",      concept:"Stream of consciousness",        detail:"James's stream of consciousness and radical empiricism directly parallel Bergson's durée; each challenges the atomistic picture of mind and time." },
-  { s:"bergson",      t:"merleauponty", concept:"Duration / lived time",          detail:"Merleau-Ponty's lived body inhabits Bergsonian duration: time is not a series of instants but a flowing, embodied continuity." },
-  { s:"husserl",      t:"heidegger",    concept:"Phenomenological method",        detail:"Heidegger was Husserl's student and assistant. He transforms phenomenology from a transcendental science of consciousness into an ontology of Being." },
-  { s:"husserl",      t:"sartre",       concept:"Intentionality / epoché",        detail:"Sartre imports Husserl's intentionality — consciousness is always of something — and uses it to argue consciousness is pure negativity." },
-  { s:"husserl",      t:"merleauponty", concept:"Phenomenology / lifeworld",      detail:"Merleau-Ponty radicalises Husserl's late concept of the lifeworld by situating it in the body, dissolving the transcendental ego." },
-  { s:"russell",      t:"wittgenstein", concept:"Logical atomism (transformed)",  detail:"The Tractatus refines and then implodes Russell's logical atomism: language pictures facts, but what makes picturing possible cannot be said." },
-  { s:"heidegger",    t:"sartre",       concept:"Facticity / situated existence", detail:"Sartre's 'situation' and his being-for-itself / being-in-itself distinction derive directly from Heidegger's account of Dasein's thrownness." },
-  { s:"heidegger",    t:"beauvoir",     concept:"Situated freedom / facticity",   detail:"Beauvoir argues freedom is always embodied and situated — a critique of both Sartre and Heidegger's tendency to treat the body as merely instrumental." },
-  { s:"heidegger",    t:"merleauponty", concept:"Being-in-the-world",             detail:"Merleau-Ponty inherits being-in-the-world but relocates it from existential structure to the lived body, giving primacy to embodied perception." },
-  { s:"heidegger",    t:"derrida",      concept:"Destruktion / trace",            detail:"Derrida radicalises Heidegger's Destruktion: there is no origin or presence, only the trace of a Being that has always already withdrawn." },
-  { s:"heidegger",    t:"arendt",       concept:"Existence and action",           detail:"Arendt was Heidegger's student. She redirects his analysis of Dasein's singularity toward political plurality — we exist as many, not as one." },
-  { s:"sartre",       t:"beauvoir",     concept:"Radical freedom (critiqued)",    detail:"Beauvoir adopts Sartre's radical freedom but critiques its abstraction: without material and social conditions, the concept of freedom is empty." },
-  { s:"merleauponty", t:"beauvoir",     concept:"Embodied subjectivity",          detail:"Beauvoir's account of woman's situation as a lived body — neither pure thing nor pure consciousness — is enriched by Merleau-Ponty's phenomenology." },
-  { s:"wittgenstein", t:"foucault",     concept:"Language games / discourse",     detail:"Foucault's 'discursive formations' echo Wittgenstein's language games: what counts as meaningful or true is constituted by rule-governed practices." },
+  // Socrates
+  { s:"socrates",      t:"plato",        concept:"Dialectic / examined life",          detail:"Plato's dialogues are almost entirely Socrates speaking. The theory of Forms, the dialectical method, and the care of the soul all flow from — or are Plato's rationalisation of — Socratic practice." },
+  { s:"socrates",      t:"aristotle",    concept:"Virtue as knowledge (critiqued)",    detail:"Aristotle accepts Socrates's centrality of virtue but argues against the Socratic claim that virtue is identical with knowledge — weakness of will (akrasia) is real, not mere ignorance." },
+
+  // Ancient
+  { s:"plato",         t:"aristotle",    concept:"Forms → substance",                  detail:"Aristotle grounds Plato's transcendent Forms in concrete substances — form is inseparable from matter, not floating in a separate realm." },
+  { s:"plato",         t:"hegel",        concept:"Dialectics / the Idea",              detail:"Hegel reads Plato as the first dialectician; the Platonic Idea becomes the Absolute Idea that drives the Logic." },
+  { s:"aristotle",     t:"aquinas",      concept:"Logic / teleology (Christianised)",  detail:"Aquinas rehabilitated Aristotle within Christian thought: hylomorphism, teleology, and the logic of categories were integrated into a theological framework that would dominate European philosophy for centuries." },
+  { s:"aristotle",     t:"hegel",        concept:"Logic / teleology",                  detail:"Hegel works through Aristotelian logic and teleology, transforming them into a historical, dialectical movement of Spirit." },
+
+  // Aquinas
+  { s:"aquinas",       t:"descartes",    concept:"Scholastic method / critique",       detail:"Descartes reacts against Scholasticism yet inherits its vocabulary (substance, essence, attribute) and its demand for certain foundations — replacing Aristotelian demonstration with the certainty of the Cogito." },
+  { s:"aquinas",       t:"locke",        concept:"Natural law → natural rights",       detail:"Locke's natural rights (life, liberty, property) secularise Aquinas's natural law — the moral order discernible by reason, now grounded in individual rights rather than divine participation." },
+
+  // Early Modern
+  { s:"descartes",     t:"hobbes",       concept:"Mechanism / materialism",            detail:"Hobbes extends Descartes's mechanistic picture of nature to the mind itself: sensation and thought are motions in matter, eliminating Cartesian dualism and grounding politics in natural science." },
+  { s:"descartes",     t:"spinoza",      concept:"Substance dualism → monism",         detail:"Spinoza adopts Descartes's rationalist method and substance vocabulary, then collapses the two substances into one infinite God-Nature." },
+  { s:"descartes",     t:"leibniz",      concept:"Rationalist method",                 detail:"Leibniz develops the Cartesian rationalist programme but replaces dualism with monads and pre-established harmony." },
+  { s:"descartes",     t:"kant",         concept:"Problem of knowledge",               detail:"Kant takes the Cartesian problem of how the subject knows the object and resolves it by making the subject the legislator of nature's laws." },
+  { s:"spinoza",       t:"hegel",        concept:"Substance as the Whole",             detail:"Hegel declares the Absolute must be understood as Substance and as Subject — he acknowledges Spinoza's achievement and transforms it." },
+  { s:"hobbes",        t:"locke",        concept:"Social contract (transformed)",      detail:"Locke rewrites Hobbes's contract: where Hobbes grants the sovereign absolute power to end the war of all against all, Locke insists the contract can be revoked when rulers violate the natural rights they were created to protect." },
+  { s:"hobbes",        t:"rousseau",     concept:"State of nature (inverted)",         detail:"Rousseau explicitly inverts Hobbes: natural man is peaceful and good; it is society and the institution of property that corrupt him. The social contract must recover rather than suppress natural freedom." },
+  { s:"locke",         t:"hume",         concept:"Empiricist tradition",               detail:"Hume inherits Locke's empiricism and radicalises it: if all ideas come from experience, causal necessity cannot be known." },
+  { s:"locke",         t:"mill",         concept:"Empiricism / individual rights",     detail:"Mill inherits Locke's empiricist framework and natural rights tradition, carrying liberal political philosophy forward through the harm principle and representative government." },
+  { s:"leibniz",       t:"kant",         concept:"Space, time, rationalism",           detail:"Kant reacts against Leibniz's view that space and time are concepts by making them pure forms of intuition." },
+
+  // Enlightenment
+  { s:"hume",          t:"kant",         concept:"Problem of causation",               detail:"Hume's skepticism about causation woke Kant from his 'dogmatic slumber' and drove the entire critical project." },
+  { s:"hume",          t:"mill",         concept:"Empiricist ethics",                  detail:"Mill's moral psychology — grounding ethics in pleasure, pain, and the natural sentiment of sympathy — continues Hume's project of basing morality on human nature rather than reason alone." },
+  { s:"rousseau",      t:"kant",         concept:"Moral autonomy / general will",      detail:"Kant called Rousseau 'the Newton of the moral world.' The categorical imperative — giving oneself the moral law — is Kant's rationalisation of Rousseau's insight that true freedom is self-legislation, not mere caprice." },
+  { s:"rousseau",      t:"wollstonecraft",concept:"Gendered ideal (rejected)",         detail:"A Vindication of the Rights of Woman is a direct reply to Rousseau's Emile, which prescribes passive domesticity for women. Wollstonecraft argues that reason cannot be gendered." },
+  { s:"rousseau",      t:"hegel",        concept:"General will / Sittlichkeit",        detail:"Hegel's Sittlichkeit — freedom realised in shared ethical institutions — develops Rousseau's general will, which already suggested that true freedom is participation in a shared moral community, not mere private choice." },
+  { s:"wollstonecraft",t:"beauvoir",     concept:"Women's rational agency",            detail:"Beauvoir's argument that women's oppression is constructed, not natural, draws directly on Wollstonecraft's application of Enlightenment reason to sex." },
+  { s:"wollstonecraft",t:"mill",         concept:"Rights of women",                    detail:"Mill's The Subjection of Women (1869) directly continues Wollstonecraft's argument: women's apparent inferiority is entirely the product of unjust social conditions, not any natural incapacity." },
+  { s:"kant",          t:"hegel",        concept:"Transcendental idealism",            detail:"Hegel absorbs Kant's subject/object distinction into a dialectical movement that overcomes it from within, dissolving the thing-in-itself." },
+  { s:"kant",          t:"beauvoir",     concept:"Autonomy (critiqued)",               detail:"Beauvoir adopts Kantian autonomy but shows it was tacitly male — real autonomy must account for the situated, embodied subject." },
+  { s:"kant",          t:"rawls",        concept:"Moral autonomy / constructivism",    detail:"Rawls describes his Theory of Justice as 'Kantian constructivism': the principles of justice are those rational agents would choose behind a veil of ignorance — a procedural rendering of the categorical imperative." },
+
+  // German Idealism
+  { s:"fichte",        t:"hegel",        concept:"Absolute I / dialectical subject",   detail:"Fichte's self-positing I and the thesis-antithesis-synthesis structure enter Hegel's Phenomenology as the dialectic of Spirit's self-development." },
+  { s:"schelling",     t:"hegel",        concept:"Nature as Spirit / Absolute",        detail:"Schelling's identity philosophy — Nature and Mind as two sides of the Absolute — informs Hegel's early development before Hegel breaks with it." },
+  { s:"hegel",         t:"marx",         concept:"Dialectics (materialised)",          detail:"Marx keeps Hegel's dialectic but materialises it: not Spirit but economic contradictions drive historical change." },
+  { s:"hegel",         t:"kierkegaard",  concept:"The System (rejected)",              detail:"Kierkegaard builds existentialism as a protest against Hegel's absorption of the concrete individual into the logical Absolute." },
+  { s:"hegel",         t:"sartre",       concept:"Master–Slave / recognition",         detail:"Sartre's 'Look' — in which I become an object for the Other — directly transforms Hegel's master-slave struggle for recognition." },
+  { s:"hegel",         t:"beauvoir",     concept:"The Other / Anerkennung",            detail:"Beauvoir's central insight: 'Woman' is Hegel's absolute Other — denied the reciprocal recognition that would grant her subjecthood." },
+  { s:"hegel",         t:"adorno",       concept:"Dialectics (negated)",               detail:"Adorno inherits the dialectic but refuses its positive resolution. 'Negative dialectics' is a permanent critique that resists any synthesis." },
+  { s:"hegel",         t:"foucault",     concept:"History / power dialectics",         detail:"Foucault's genealogies borrow the idea of historically constituted subjects from Hegel while rejecting any teleological reconciliation." },
+  { s:"schopenhauer",  t:"nietzsche",    concept:"Will (transformed)",                 detail:"Nietzsche takes Schopenhauer's blind Will, strips away its Buddhist resignation, and transforms it into the affirmative will to power." },
+  { s:"schopenhauer",  t:"wittgenstein", concept:"Limits of language / mystical",      detail:"Wittgenstein's Tractatus ends where Schopenhauer does: what matters most — ethics, the mystical — cannot be said, only shown." },
+
+  // 19th Century
+  { s:"feuerbach",     t:"marx",         concept:"Anthropological materialism",        detail:"Feuerbach showed religion is human self-alienation. Marx extends this to labour: workers are alienated from their species-being under capitalism." },
+  { s:"mill",          t:"russell",      concept:"Empiricism / liberal tradition",     detail:"Russell inherits Mill's empiricist inheritance and liberal political commitments, situating analytic philosophy within the broader British tradition that fuses logic with social concern." },
+  { s:"mill",          t:"rawls",        concept:"Utilitarianism (critiqued)",         detail:"A Theory of Justice opens as a sustained critique of utilitarianism: no aggregate of happiness can justify violating the basic rights of individuals — justice is not the maximisation of the good." },
+  { s:"marx",          t:"adorno",       concept:"Historical materialism",             detail:"Frankfurt School Critical Theory fuses Marx with Weber and Freud to analyse why the working class fails to recognise its own interests." },
+  { s:"kierkegaard",   t:"heidegger",    concept:"Authenticity / anxiety",             detail:"Heidegger's authentic Dasein — owning one's thrownness in the face of death — is a secularisation of Kierkegaard's individual before God." },
+  { s:"kierkegaard",   t:"sartre",       concept:"Subjective truth / anxiety",         detail:"Sartre's radical freedom and existential 'nausea' inherit Kierkegaard's insistence on inward, subjective certainty over the System." },
+
+  // Late 19th
+  { s:"nietzsche",     t:"heidegger",    concept:"Destruction of metaphysics",         detail:"Heidegger's Destruktion of the Western tradition directly continues Nietzsche's genealogical critique of Platonism and Christian morality." },
+  { s:"nietzsche",     t:"sartre",       concept:"Values as created",                  detail:"Sartre's 'existence precedes essence' echoes Nietzsche's insistence that values are made, not discovered — the self is always a project." },
+  { s:"nietzsche",     t:"foucault",     concept:"Genealogy / power–knowledge",        detail:"Foucault's genealogical method is explicitly Nietzschean: expose the power interests concealed in claims to truth, normality, or health." },
+  { s:"nietzsche",     t:"derrida",      concept:"Perspectivism / trace",              detail:"Derrida's différance — meaning always deferred, never fully present — echoes Nietzsche's perspectivism: there is no unmediated access to truth." },
+  { s:"frege",         t:"russell",      concept:"Mathematical logic",                 detail:"Russell builds on Frege's predicate logic; he discovers the set-theoretic paradox that forces a revision of Frege's original system." },
+  { s:"frege",         t:"wittgenstein", concept:"Language and logic",                 detail:"Wittgenstein inherits Frege's anti-psychologism and the view that logical structure determines meaning — then radically rethinks both." },
+  { s:"frege",         t:"quine",        concept:"Ontology / logic",                   detail:"Quine inherits Frege's question — what entities must our theories posit? — but answers naturalistically: ontological commitment is read off from our best scientific theories, not secured by logic alone." },
+  { s:"james",         t:"bergson",      concept:"Stream of consciousness",            detail:"James's stream of consciousness and radical empiricism directly parallel Bergson's durée; each challenges the atomistic picture of mind and time." },
+  { s:"bergson",       t:"merleauponty", concept:"Duration / lived time",              detail:"Merleau-Ponty's lived body inhabits Bergsonian duration: time is not a series of instants but a flowing, embodied continuity." },
+  { s:"husserl",       t:"heidegger",    concept:"Phenomenological method",            detail:"Heidegger was Husserl's student and assistant. He transforms phenomenology from a transcendental science of consciousness into an ontology of Being." },
+  { s:"husserl",       t:"sartre",       concept:"Intentionality / epoché",            detail:"Sartre imports Husserl's intentionality — consciousness is always of something — and uses it to argue consciousness is pure negativity." },
+  { s:"husserl",       t:"merleauponty", concept:"Phenomenology / lifeworld",          detail:"Merleau-Ponty radicalises Husserl's late concept of the lifeworld by situating it in the body, dissolving the transcendental ego." },
+
+  // Turn of Century
+  { s:"russell",       t:"wittgenstein", concept:"Logical atomism (transformed)",      detail:"The Tractatus refines and then implodes Russell's logical atomism: language pictures facts, but what makes picturing possible cannot be said." },
+  { s:"russell",       t:"quine",        concept:"Logical empiricism (critiqued)",     detail:"Quine's 'Two Dogmas of Empiricism' dismantles the analytic/synthetic distinction Russell's programme assumed, redirecting analytic philosophy from logical analysis toward scientific naturalism." },
+  { s:"wittgenstein",  t:"foucault",     concept:"Language games / discourse",         detail:"Foucault's 'discursive formations' echo Wittgenstein's language games: what counts as meaningful or true is constituted by rule-governed practices." },
+  { s:"wittgenstein",  t:"quine",        concept:"Meaning / indeterminacy",            detail:"Quine's indeterminacy of translation radicalises the Wittgensteinian point that meaning is use: if radical translation is indeterminate, there is no fact of the matter about what any sentence really means." },
+  { s:"heidegger",     t:"sartre",       concept:"Facticity / situated existence",     detail:"Sartre's 'situation' and his being-for-itself / being-in-itself distinction derive directly from Heidegger's account of Dasein's thrownness." },
+  { s:"heidegger",     t:"beauvoir",     concept:"Situated freedom / facticity",       detail:"Beauvoir argues freedom is always embodied and situated — a critique of both Sartre and Heidegger's tendency to treat the body as merely instrumental." },
+  { s:"heidegger",     t:"merleauponty", concept:"Being-in-the-world",                 detail:"Merleau-Ponty inherits being-in-the-world but relocates it from existential structure to the lived body, giving primacy to embodied perception." },
+  { s:"heidegger",     t:"derrida",      concept:"Destruktion / trace",                detail:"Derrida radicalises Heidegger's Destruktion: there is no origin or presence, only the trace of a Being that has always already withdrawn." },
+  { s:"heidegger",     t:"arendt",       concept:"Existence and action",               detail:"Arendt was Heidegger's student. She redirects his analysis of Dasein's singularity toward political plurality — we exist as many, not as one." },
+
+  // Existentialist Era
+  { s:"sartre",        t:"beauvoir",     concept:"Radical freedom (critiqued)",        detail:"Beauvoir adopts Sartre's radical freedom but critiques its abstraction: without material and social conditions, the concept of freedom is empty." },
+  { s:"merleauponty",  t:"beauvoir",     concept:"Embodied subjectivity",              detail:"Beauvoir's account of woman's situation as a lived body — neither pure thing nor pure consciousness — is enriched by Merleau-Ponty's phenomenology." },
 ];
 
 // ─── SETUP ───────────────────────────────────────────────────────────────────
@@ -422,7 +493,7 @@ const elabels = elabelG.selectAll("text").data(links).join("text")
   .attr("class","edge-label").text(d => d.concept);
 
 // ─── NODES ───────────────────────────────────────────────────────────────────
-const KEY = new Set(["plato","aristotle","kant","hegel","beauvoir","heidegger","nietzsche","husserl"]);
+const KEY = new Set(["socrates","plato","aristotle","kant","hegel","beauvoir","heidegger","nietzsche","husserl"]);
 const nodeG = root.append("g");
 const nodes = nodeG.selectAll("g").data(P).join("g")
   .attr("class","philosopher")
