@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Philosophical Lineages</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Georgia', serif;
+  background: #f5f2ed;
+  color: #2a2420;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+header {
+  padding: 13px 22px 10px;
+  border-bottom: 1px solid #ddd8d0;
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  flex-shrink: 0;
+}
+header h1 { font-size: 1.05rem; font-weight: normal; color: #3a3028; letter-spacing: .05em; }
+header span { font-size: .7rem; color: #a09890; font-style: italic; }
+
+#main { display: flex; flex: 1; overflow: hidden; }
+#graph-container { flex: 1; overflow: hidden; position: relative; }
+svg { width: 100%; height: 100%; }
+
+.era-label {
+  font-size: 9px; text-anchor: middle; letter-spacing: .08em; text-transform: uppercase; pointer-events: none;
+  paint-order: stroke fill; stroke: #f5f2ed; stroke-width: 4px; stroke-linejoin: round;
+}
+.era-period {
+  font-size: 7.5px; text-anchor: middle; font-style: italic; pointer-events: none;
+  paint-order: stroke fill; stroke: #f5f2ed; stroke-width: 3px; stroke-linejoin: round;
+}
+
+.philosopher circle {
+  stroke-width: 1.8;
+  cursor: pointer;
+  transition: filter .12s;
+}
+.philosopher:hover circle { filter: brightness(0.82); }
+.phil-name {
+  font-size: 10.5px; fill: #2a2420; text-anchor: middle; pointer-events: none; font-family: Georgia, serif;
+  paint-order: stroke fill; stroke: #f5f2ed; stroke-width: 5px; stroke-linejoin: round;
+}
+.phil-birth {
+  font-size: 8.5px; fill: #9a9080; text-anchor: middle; pointer-events: none;
+  paint-order: stroke fill; stroke: #f5f2ed; stroke-width: 4px; stroke-linejoin: round;
+}
+
+.influence-path {
+  fill: none;
+  stroke-width: 1.1;
+  stroke-opacity: .18;
+  transition: stroke-opacity .1s, stroke-width .1s;
+}
+.influence-path.hi   { stroke-opacity: .85 !important; stroke-width: 2 !important; }
+.influence-path.fade { stroke-opacity: .05 !important; }
+
+.edge-label {
+  font-size: 9px; fill: #806878; text-anchor: middle;
+  pointer-events: none; font-style: italic;
+  opacity: 0; transition: opacity .15s;
+  paint-order: stroke fill; stroke: #f5f2ed; stroke-width: 4px; stroke-linejoin: round;
+}
+.edge-label.show { opacity: 1; }
+
+#sidebar {
+  width: 272px;
+  border-left: 1px solid #ddd8d0;
+  background: #faf8f4;
+  padding: 18px 14px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.s-trad {
+  display: inline-block; font-size: .62rem; padding: 2px 8px;
+  border-radius: 10px; margin-bottom: 7px; letter-spacing: .04em;
+}
+.s-name  { font-size: .95rem; margin-bottom: 1px; color: #1e1a18; }
+.s-years { font-size: .68rem; color: #a09090; margin-bottom: 7px; }
+.s-bio   { font-size: .72rem; color: #706068; line-height: 1.65; font-style: italic; margin-bottom: 10px; }
+.s-h     { font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; color: #b0a8b0; margin: 10px 0 5px; }
+.concept { font-size: .72rem; color: #605068; padding: 2px 0 2px 9px; border-left: 2px solid #ddd0d8; margin-bottom: 2px; }
+.inf-item { font-size: .7rem; color: #706070; margin-bottom: 7px; line-height: 1.55; padding-left: 8px; border-left: 2px solid #ddd0d8; }
+.inf-item strong { color: #1e1a18; display: block; }
+.inf-item em { color: #a898a0; font-size: .66rem; }
+#ph { color: #c0b8c0; font-size: .78rem; font-style: italic; text-align: center; margin-top: 36px; line-height: 1.9; }
+
+#legend {
+  position: absolute; bottom: 12px; left: 12px;
+  display: flex; flex-wrap: wrap; gap: 7px; max-width: 480px;
+}
+.li { display: flex; align-items: center; gap: 4px; font-size: .64rem; color: #908898; }
+.ld { width: 7px; height: 7px; border-radius: 50%; }
+.hint { position: absolute; top: 9px; right: 10px; font-size: .65rem; color: #c0b8b8; font-style: italic; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Philosophical Lineages</h1>
+  <span>31 philosophers · organised by era · click any node to trace influence · scroll to zoom · drag to pan</span>
+</header>
+<div id="main">
+  <div id="graph-container">
+    <svg id="graph"></svg>
+    <div class="hint">scroll to zoom &bull; drag to pan</div>
+    <div id="legend"></div>
+  </div>
+  <div id="sidebar"><div id="ph">Select a philosopher to see their key concepts and intellectual genealogy.</div></div>
+</div>
+
+<script>
+const T = {
+  "Ancient":               { c:"#9a6e10", bg:"#f5e8c8" },
+  "Rationalism":           { c:"#4455b0", bg:"#dde2f5" },
+  "Empiricism":            { c:"#2860a0", bg:"#d5e5f5" },
+  "German Idealism":       { c:"#6638a8", bg:"#ead8f5" },
+  "Pessimism":             { c:"#785040", bg:"#f0e4dc" },
+  "Materialism":           { c:"#a05018", bg:"#f5e0cc" },
+  "Marxism":               { c:"#982820", bg:"#f5d5d0" },
+  "Proto-Existentialism":  { c:"#a06818", bg:"#f5e8cc" },
+  "Pragmatism":            { c:"#286840", bg:"#d0f0dd" },
+  "Analytic":              { c:"#1868a0", bg:"#cce5f5" },
+  "Phenomenology":         { c:"#107060", bg:"#c8eee8" },
+  "Early Feminism":        { c:"#984878", bg:"#f5d8ec" },
+  "Existentialism":        { c:"#107858", bg:"#c8eedf" },
+  "Critical Theory":       { c:"#902848", bg:"#f5cedd" },
+  "Political":             { c:"#506030", bg:"#e2ecc8" },
+  "Post-structuralism":    { c:"#7030a0", bg:"#e8ccf5" },
+};
+
+const COLS = [
+  { name:"Ancient",            period:"c. 428–322 BCE", band:"rgba(180,140,60,.10)"  },
+  { name:"Early Modern",       period:"1596–1660",       band:"rgba(80,100,200,.08)"  },
+  { name:"Enlightenment",      period:"1711–1790",       band:"rgba(120,80,200,.09)"  },
+  { name:"German Idealism",    period:"1762–1831",       band:"rgba(100,55,180,.10)"  },
+  { name:"19th Century",       period:"1804–1820",       band:"rgba(180,70,55,.08)"   },
+  { name:"Late 19th",          period:"1839–1875",       band:"rgba(55,150,110,.08)"  },
+  { name:"Turn of Century",    period:"1872–1910",       band:"rgba(50,120,190,.08)"  },
+  { name:"Existentialist Era", period:"1903–1910",       band:"rgba(35,140,120,.09)"  },
+  { name:"Post-structuralism", period:"1926–1930",       band:"rgba(150,55,180,.10)"  },
+];
+
+const P = [
+  // col 0 — Ancient
+  { id:"plato", name:"Plato", years:"c. 428–348 BCE", col:0, tradition:"Ancient",
+    bio:"Plato's theory of Forms posited an eternal realm of perfect archetypes behind appearances. Through Socratic dialogue and dialectic he set the template for Western rationalism.",
+    concepts:["Theory of Forms — eternal archetypes behind appearances","Dialectical method (Socratic dialogue)","Allegory of the cave — knowledge as ascent","The tripartite soul","The Republic — philosopher-kings","Eros and the ascent to Beauty"] },
+
+  { id:"aristotle", name:"Aristotle", years:"384–322 BCE", col:0, tradition:"Ancient",
+    bio:"Aristotle grounded Plato's idealism in observable nature. Form is inseparable from matter; logic, ethics, and biology flow from careful observation of the world.",
+    concepts:["Hylomorphism — form inseparable from matter","Predicate logic / syllogism","Teleology — things aim at their end","Virtue ethics and the golden mean","Empirical observation as method","Categories of being"] },
+
+  // col 1 — Early Modern
+  { id:"descartes", name:"Descartes", years:"1596–1650", col:1, tradition:"Rationalism",
+    bio:"Descartes cleared the philosophical ground by doubting everything until he reached the indubitability of the thinking subject. His mind–body dualism set the agenda for modern philosophy of mind.",
+    concepts:["Cogito ergo sum","Methodological doubt","Mind–body dualism (res cogitans / res extensa)","Innate ideas","The mechanical universe","Mathematical method in philosophy"] },
+
+  { id:"spinoza", name:"Spinoza", years:"1632–1677", col:1, tradition:"Rationalism",
+    bio:"Spinoza collapsed Descartes's two substances into one: God-or-Nature, the single infinite substance of which mind and matter are attributes. Ethics, done geometrically, is a liberation theology.",
+    concepts:["Deus sive Natura — God = Nature","Substance monism","Attributes and modes","Conatus — drive to persist in being","Ethics more geometrico","Determinism and adequate ideas"] },
+
+  { id:"locke", name:"Locke", years:"1632–1704", col:1, tradition:"Empiricism",
+    bio:"Locke argued the mind begins as a blank slate; all knowledge derives from sense experience. His political philosophy of property, consent, and natural rights fed directly into liberal democracy.",
+    concepts:["Tabula rasa — mind as blank slate","Primary vs. secondary qualities","Social contract and consent","Natural rights: life, liberty, property","Limits of human understanding","Religious toleration"] },
+
+  { id:"leibniz", name:"Leibniz", years:"1646–1716", col:1, tradition:"Rationalism",
+    bio:"Leibniz imagined reality as an infinity of windowless mind-like units (monads) whose harmony is pre-established by God. He co-invented calculus and argued this is the best possible world.",
+    concepts:["Monads — windowless mental units","Pre-established harmony","Principle of sufficient reason","Best of all possible worlds (theodicy)","Identity of indiscernibles","Infinitesimal calculus"] },
+
+  // col 2 — Enlightenment
+  { id:"hume", name:"Hume", years:"1711–1776", col:2, tradition:"Empiricism",
+    bio:"Hume pushed empiricism to its radical conclusion: cause and effect is a habit of mind, not a necessary feature of reality. There is no stable self — only a bundle of perceptions.",
+    concepts:["Causal skepticism — custom not necessity","Bundle theory of the self","Problem of induction","Sentiment as foundation of ethics","Is–ought gap","Skepticism about metaphysics"] },
+
+  { id:"wollstonecraft", name:"Wollstonecraft", years:"1759–1797", col:2, tradition:"Early Feminism",
+    bio:"Wollstonecraft argued that women's apparent irrationality was the product of deficient education, not nature. A Vindication of the Rights of Woman applied Enlightenment reason to sex.",
+    concepts:["Women as rational agents","Rights of woman — education and citizenship","Critique of Rousseau's gendered ideal","Virtue as rational, not ornamental","Social construction of femininity (avant la lettre)"] },
+
+  { id:"kant", name:"Kant", years:"1724–1804", col:2, tradition:"German Idealism",
+    bio:"Kant drew the boundary between what we can know (appearances) and what exists independently (things-in-themselves), and grounded morality in rational autonomy rather than consequences or God.",
+    concepts:["Transcendental idealism — phenomena vs. noumena","Categorical imperative — universal moral law","Pure reason and its limits","Autonomy as the ground of dignity","The sublime","Copernican revolution in philosophy"] },
+
+  // col 3 — German Idealism
+  { id:"fichte", name:"Fichte", years:"1762–1814", col:3, tradition:"German Idealism",
+    bio:"Fichte radicalised Kant by making the self-positing I the foundation of all reality. The Not-I (world) exists only as the I's necessary opponent — groundwork for Hegel's dialectics.",
+    concepts:["The Absolute I — self-positing subject","Thesis, antithesis, synthesis (first explicit formulation)","Wissenschaftslehre (Science of Knowledge)","Practical reason as primary","National consciousness and the State"] },
+
+  { id:"schelling", name:"Schelling", years:"1775–1854", col:3, tradition:"German Idealism",
+    bio:"Schelling sought a philosophy of Nature in which the same Absolute is expressed in both natural processes and human consciousness, influencing Romantic science and later existentialists.",
+    concepts:["Nature-philosophy — Nature as visible Spirit","Identity of subject and object in the Absolute","Freedom and the dark ground of existence","Potencies of Being","Critique of Hegel's rationalism","Mythology and revelation"] },
+
+  { id:"hegel", name:"Hegel", years:"1770–1831", col:3, tradition:"German Idealism",
+    bio:"Hegel radicalised Kant by arguing that the division between subject and object is itself a historical process. The Master–Slave dialectic became a template for liberation theory.",
+    concepts:["Dialectics — Aufhebung (sublation)","Master–Slave dialectic","Geist (Spirit) unfolding through history","Recognition (Anerkennung) as constitutive of selfhood","Alienation","Absolute Idealism"] },
+
+  { id:"schopenhauer", name:"Schopenhauer", years:"1788–1860", col:3, tradition:"Pessimism",
+    bio:"Schopenhauer revealed behind Kant's noumenon a blind, insatiable Will. Life is suffering; redemption lies in aesthetic contemplation and the denial of will — a synthesis of Kant and Vedanta.",
+    concepts:["World as Will and Representation","The Will as blind, unconscious striving","Pessimism — suffering as fundamental","Art (especially music) as temporary escape","Compassion as ethical foundation","Vedanta and Buddhist resonances"] },
+
+  // col 4 — 19th Century I
+  { id:"feuerbach", name:"Feuerbach", years:"1804–1872", col:4, tradition:"Materialism",
+    bio:"Feuerbach inverted Hegel: it is not Spirit that generates man but man who projects his highest qualities onto God. Theology is disguised anthropology — Marx's immediate predecessor.",
+    concepts:["God as projection of human nature","Anthropological materialism","Species-being (Gattungswesen)","Sensuous materialism — the body as real","Critique of Hegel's abstraction","Religion as self-alienation"] },
+
+  { id:"kierkegaard", name:"Kierkegaard", years:"1813–1855", col:4, tradition:"Proto-Existentialism",
+    bio:"Kierkegaard rejected Hegel's totality: the most important truths are those I stake my life on. He mapped existence through aesthetic, ethical, and religious stages of selfhood.",
+    concepts:["The subjective individual vs. the System","Aesthetic / Ethical / Religious stages","Anxiety and the leap of faith","Repetition","Authentic selfhood","Either/Or"] },
+
+  { id:"marx", name:"Marx", years:"1818–1883", col:4, tradition:"Marxism",
+    bio:"Marx took Hegel's dialectic and stood it on its feet: material conditions, not Spirit, drive history. Alienated labour describes workers estranged from their product, activity, and species-being.",
+    concepts:["Dialectical materialism (inverting Hegel)","Historical materialism","Alienated labour","Class consciousness","Base and superstructure","Commodity fetishism"] },
+
+  // col 5 — Late 19th Century
+  { id:"james", name:"W. James", years:"1842–1910", col:5, tradition:"Pragmatism",
+    bio:"James founded Pragmatism as a theory of truth: an idea is true if it works. His psychology introduced the 'stream of consciousness' and challenged atomistic views of mind and time.",
+    concepts:["Truth as what works (pragmatic theory)","Stream of consciousness","Radical empiricism","The Will to Believe","Pluralism vs. monism","Psychology and habit"] },
+
+  { id:"nietzsche", name:"Nietzsche", years:"1844–1900", col:5, tradition:"Proto-Existentialism",
+    bio:"Nietzsche dismantled the metaphysical and moral scaffolding of Western philosophy. All valuation is a creative act; beyond slave-morality stands the self-overcoming individual.",
+    concepts:["Will to power","Eternal recurrence","Perspectivism — no view from nowhere","Slave morality vs. master morality","Übermensch","Death of God / nihilism"] },
+
+  { id:"frege", name:"Frege", years:"1848–1925", col:5, tradition:"Analytic",
+    bio:"Frege invented modern predicate logic and distinguished sense (Sinn) from reference (Bedeutung). His programme to reduce arithmetic to logic launched the analytic tradition.",
+    concepts:["Predicate logic — quantifiers and variables","Sense (Sinn) vs. reference (Bedeutung)","Foundations of arithmetic","Begriffsschrift (concept-script)","Anti-psychologism in logic","Context principle"] },
+
+  { id:"bergson", name:"Bergson", years:"1859–1941", col:5, tradition:"Phenomenology",
+    bio:"Bergson argued that real time (durée) is qualitative flux that science's spatial clock kills. Intuition, not intellect, grasps life's continuous becoming — the élan vital.",
+    concepts:["Duration (durée) — qualitative time","Élan vital — creative impulse of life","Intuition vs. intellect","Memory and perception","Critique of mechanistic biology","Process philosophy"] },
+
+  { id:"husserl", name:"Husserl", years:"1859–1938", col:5, tradition:"Phenomenology",
+    bio:"Husserl built phenomenology as a rigorous science of consciousness, insisting we describe experience exactly as it presents itself before theorising about its causes.",
+    concepts:["Phenomenology — back to the things themselves","Intentionality: consciousness is always of something","Epoché (bracketing the natural attitude)","Lifeworld (Lebenswelt)","Transcendental ego","Time-consciousness"] },
+
+  // col 6 — Turn of Century
+  { id:"russell", name:"Russell", years:"1872–1970", col:6, tradition:"Analytic",
+    bio:"Russell forged logical atomism and the theory of descriptions to reveal logical form beneath ordinary language. With Whitehead he wrote Principia Mathematica.",
+    concepts:["Logical atomism","Theory of definite descriptions","Principia Mathematica (with Whitehead)","Sense data and epistemology","Logical form vs. grammatical form","Philosophy as logical analysis"] },
+
+  { id:"wittgenstein", name:"Wittgenstein", years:"1889–1951", col:6, tradition:"Analytic",
+    bio:"The early Wittgenstein pictured the world in logical propositions; the later Wittgenstein dissolved philosophical problems by tracing the use of words within 'language games'.",
+    concepts:["Picture theory of meaning (Tractatus)","What can be said vs. shown","Language games","Meaning as use","Private language argument","Forms of life"] },
+
+  { id:"heidegger", name:"Heidegger", years:"1889–1976", col:6, tradition:"Phenomenology",
+    bio:"Heidegger transformed Husserl's phenomenology into an analysis of Being: we are always already situated in a world we did not choose, and authenticity means owning that thrown existence.",
+    concepts:["Being-in-the-world (Dasein)","Thrownness and facticity","Authenticity vs. das Man","Care (Sorge)","Being-toward-death","Destruction of Western metaphysics"] },
+
+  { id:"adorno", name:"Adorno", years:"1903–1969", col:6, tradition:"Critical Theory",
+    bio:"Adorno took Hegel's dialectic and refused its reconciliation: the culture industry commodifies even critical thought, and reality escapes any concept that claims to capture it.",
+    concepts:["Negative dialectics — resists totality","Culture industry","The non-identical (what concepts miss)","Dialectic of Enlightenment (with Horkheimer)","Aesthetic theory","Minima Moralia"] },
+
+  // col 7 — Existentialist Era
+  { id:"sartre", name:"Sartre", years:"1905–1980", col:7, tradition:"Existentialism",
+    bio:"Sartre fused Heidegger's situated existence with Hegel's dialectic of recognition: there is no fixed human nature, so we are condemned to create ourselves — and to be objectified by the Other.",
+    concepts:["Existence precedes essence","Radical freedom and responsibility","Bad faith (self-deception)","The Look — objectification by the Other","Being-in-itself vs. being-for-itself","Situation"] },
+
+  { id:"arendt", name:"Arendt", years:"1906–1975", col:7, tradition:"Political",
+    bio:"Arendt analysed totalitarianism and reconstructed political life as the space of plural human action. The 'banality of evil' described not monsters but the thoughtlessness of bureaucratic complicity.",
+    concepts:["The human condition: labour, work, action","Plurality as the condition of politics","The public realm vs. private","Totalitarianism and the banality of evil","Natality — the capacity to begin","Thinking and moral responsibility"] },
+
+  { id:"beauvoir", name:"de Beauvoir", years:"1908–1986", col:7, tradition:"Existentialism",
+    bio:"Beauvoir combined Sartre's freedom with Hegel's dialectic of the Other to show that 'Woman' is constructed as man's absolute Other — denied transcendence, confined to immanence.",
+    concepts:["Woman as the Other (Hegelian Anerkennung)","Situated freedom — freedom is always embodied","Immanence vs. transcendence","\"One is not born, but becomes, a woman\"","Ambiguity of the human condition","Ethics of reciprocal freedom"] },
+
+  { id:"merleauponty", name:"Merleau-Ponty", years:"1908–1961", col:7, tradition:"Phenomenology",
+    bio:"Where Sartre's subject is pure consciousness, Merleau-Ponty argued we are our bodies: perception is already a form of understanding, not raw data processed by a detached mind.",
+    concepts:["The lived body as primary subject","Perception as being-in-the-world","Motor intentionality","Intercorporeality","The flesh (la chair)","Visible and invisible"] },
+
+  // col 8 — Post-structuralism
+  { id:"foucault", name:"Foucault", years:"1926–1984", col:8, tradition:"Post-structuralism",
+    bio:"Foucault used Nietzschean genealogy to expose how power produces knowledge, normality, and the subject itself. The prison, the clinic, and sexuality are all sites where discourse disciplines bodies.",
+    concepts:["Genealogy of knowledge–power","Discourse and discursive formations","Biopower / biopolitics","Discipline and Punish","History of Sexuality","The episteme"] },
+
+  { id:"derrida", name:"Derrida", years:"1930–2004", col:8, tradition:"Post-structuralism",
+    bio:"Derrida showed that texts always harbour undecidable tensions: the logic of binary oppositions secretly depends on what it excludes. Deconstruction is close reading of that dependency.",
+    concepts:["Deconstruction","Différance — differing and deferring","Logocentrism — privilege of presence","The trace","Writing as primary over speech","The supplement","Hauntology"] },
+];
+
+const INF = [
+  { s:"plato",        t:"aristotle",    concept:"Forms → substance",              detail:"Aristotle grounds Plato's transcendent Forms in concrete substances — form is inseparable from matter, not floating in a separate realm." },
+  { s:"plato",        t:"hegel",        concept:"Dialectics / the Idea",          detail:"Hegel reads Plato as the first dialectician; the Platonic Idea becomes the Absolute Idea that drives the Logic." },
+  { s:"aristotle",    t:"hegel",        concept:"Logic / teleology",              detail:"Hegel works through Aristotelian logic and teleology, transforming them into a historical, dialectical movement of Spirit." },
+  { s:"descartes",    t:"spinoza",      concept:"Substance dualism → monism",     detail:"Spinoza adopts Descartes's rationalist method and substance vocabulary, then collapses the two substances into one infinite God-Nature." },
+  { s:"descartes",    t:"leibniz",      concept:"Rationalist method",             detail:"Leibniz develops the Cartesian rationalist programme but replaces dualism with monads and pre-established harmony." },
+  { s:"descartes",    t:"kant",         concept:"Problem of knowledge",           detail:"Kant takes the Cartesian problem of how the subject knows the object and resolves it by making the subject the legislator of nature's laws." },
+  { s:"spinoza",      t:"hegel",        concept:"Substance as the Whole",         detail:"Hegel declares the Absolute must be understood as Substance and as Subject — he acknowledges Spinoza's achievement and transforms it." },
+  { s:"locke",        t:"hume",         concept:"Empiricist tradition",           detail:"Hume inherits Locke's empiricism and radicalises it: if all ideas come from experience, causal necessity cannot be known." },
+  { s:"leibniz",      t:"kant",         concept:"Space, time, rationalism",       detail:"Kant reacts against Leibniz's view that space and time are concepts by making them pure forms of intuition." },
+  { s:"hume",         t:"kant",         concept:"Problem of causation",           detail:"Hume's skepticism about causation woke Kant from his 'dogmatic slumber' and drove the entire critical project." },
+  { s:"wollstonecraft",t:"beauvoir",    concept:"Women's rational agency",        detail:"Beauvoir's argument that women's oppression is constructed, not natural, draws directly on Wollstonecraft's application of Enlightenment reason to sex." },
+  { s:"kant",         t:"hegel",        concept:"Transcendental idealism",        detail:"Hegel absorbs Kant's subject/object distinction into a dialectical movement that overcomes it from within, dissolving the thing-in-itself." },
+  { s:"kant",         t:"beauvoir",     concept:"Autonomy (critiqued)",           detail:"Beauvoir adopts Kantian autonomy but shows it was tacitly male — real autonomy must account for the situated, embodied subject." },
+  { s:"fichte",       t:"hegel",        concept:"Absolute I / dialectical subject",detail:"Fichte's self-positing I and the thesis-antithesis-synthesis structure enter Hegel's Phenomenology as the dialectic of Spirit's self-development." },
+  { s:"schelling",    t:"hegel",        concept:"Nature as Spirit / Absolute",    detail:"Schelling's identity philosophy — Nature and Mind as two sides of the Absolute — informs Hegel's early development before Hegel breaks with it." },
+  { s:"hegel",        t:"marx",         concept:"Dialectics (materialised)",      detail:"Marx keeps Hegel's dialectic but materialises it: not Spirit but economic contradictions drive historical change." },
+  { s:"hegel",        t:"kierkegaard",  concept:"The System (rejected)",          detail:"Kierkegaard builds existentialism as a protest against Hegel's absorption of the concrete individual into the logical Absolute." },
+  { s:"hegel",        t:"sartre",       concept:"Master–Slave / recognition",     detail:"Sartre's 'Look' — in which I become an object for the Other — directly transforms Hegel's master-slave struggle for recognition." },
+  { s:"hegel",        t:"beauvoir",     concept:"The Other / Anerkennung",        detail:"Beauvoir's central insight: 'Woman' is Hegel's absolute Other — denied the reciprocal recognition that would grant her subjecthood." },
+  { s:"hegel",        t:"adorno",       concept:"Dialectics (negated)",           detail:"Adorno inherits the dialectic but refuses its positive resolution. 'Negative dialectics' is a permanent critique that resists any synthesis." },
+  { s:"hegel",        t:"foucault",     concept:"History / power dialectics",     detail:"Foucault's genealogies borrow the idea of historically constituted subjects from Hegel while rejecting any teleological reconciliation." },
+  { s:"schopenhauer", t:"nietzsche",    concept:"Will (transformed)",             detail:"Nietzsche takes Schopenhauer's blind Will, strips away its Buddhist resignation, and transforms it into the affirmative will to power." },
+  { s:"schopenhauer", t:"wittgenstein", concept:"Limits of language / mystical",  detail:"Wittgenstein's Tractatus ends where Schopenhauer does: what matters most — ethics, the mystical — cannot be said, only shown." },
+  { s:"feuerbach",    t:"marx",         concept:"Anthropological materialism",    detail:"Feuerbach showed religion is human self-alienation. Marx extends this to labour: workers are alienated from their species-being under capitalism." },
+  { s:"marx",         t:"adorno",       concept:"Historical materialism",         detail:"Frankfurt School Critical Theory fuses Marx with Weber and Freud to analyse why the working class fails to recognise its own interests." },
+  { s:"kierkegaard",  t:"heidegger",    concept:"Authenticity / anxiety",         detail:"Heidegger's authentic Dasein — owning one's thrownness in the face of death — is a secularisation of Kierkegaard's individual before God." },
+  { s:"kierkegaard",  t:"sartre",       concept:"Subjective truth / anxiety",     detail:"Sartre's radical freedom and existential 'nausea' inherit Kierkegaard's insistence on inward, subjective certainty over the System." },
+  { s:"nietzsche",    t:"heidegger",    concept:"Destruction of metaphysics",     detail:"Heidegger's Destruktion of the Western tradition directly continues Nietzsche's genealogical critique of Platonism and Christian morality." },
+  { s:"nietzsche",    t:"sartre",       concept:"Values as created",              detail:"Sartre's 'existence precedes essence' echoes Nietzsche's insistence that values are made, not discovered — the self is always a project." },
+  { s:"nietzsche",    t:"foucault",     concept:"Genealogy / power–knowledge",    detail:"Foucault's genealogical method is explicitly Nietzschean: expose the power interests concealed in claims to truth, normality, or health." },
+  { s:"nietzsche",    t:"derrida",      concept:"Perspectivism / trace",          detail:"Derrida's différance — meaning always deferred, never fully present — echoes Nietzsche's perspectivism: there is no unmediated access to truth." },
+  { s:"frege",        t:"russell",      concept:"Mathematical logic",             detail:"Russell builds on Frege's predicate logic; he discovers the set-theoretic paradox that forces a revision of Frege's original system." },
+  { s:"frege",        t:"wittgenstein", concept:"Language and logic",             detail:"Wittgenstein inherits Frege's anti-psychologism and the view that logical structure determines meaning — then radically rethinks both." },
+  { s:"james",        t:"bergson",      concept:"Stream of consciousness",        detail:"James's stream of consciousness and radical empiricism directly parallel Bergson's durée; each challenges the atomistic picture of mind and time." },
+  { s:"bergson",      t:"merleauponty", concept:"Duration / lived time",          detail:"Merleau-Ponty's lived body inhabits Bergsonian duration: time is not a series of instants but a flowing, embodied continuity." },
+  { s:"husserl",      t:"heidegger",    concept:"Phenomenological method",        detail:"Heidegger was Husserl's student and assistant. He transforms phenomenology from a transcendental science of consciousness into an ontology of Being." },
+  { s:"husserl",      t:"sartre",       concept:"Intentionality / epoché",        detail:"Sartre imports Husserl's intentionality — consciousness is always of something — and uses it to argue consciousness is pure negativity." },
+  { s:"husserl",      t:"merleauponty", concept:"Phenomenology / lifeworld",      detail:"Merleau-Ponty radicalises Husserl's late concept of the lifeworld by situating it in the body, dissolving the transcendental ego." },
+  { s:"russell",      t:"wittgenstein", concept:"Logical atomism (transformed)",  detail:"The Tractatus refines and then implodes Russell's logical atomism: language pictures facts, but what makes picturing possible cannot be said." },
+  { s:"heidegger",    t:"sartre",       concept:"Facticity / situated existence", detail:"Sartre's 'situation' and his being-for-itself / being-in-itself distinction derive directly from Heidegger's account of Dasein's thrownness." },
+  { s:"heidegger",    t:"beauvoir",     concept:"Situated freedom / facticity",   detail:"Beauvoir argues freedom is always embodied and situated — a critique of both Sartre and Heidegger's tendency to treat the body as merely instrumental." },
+  { s:"heidegger",    t:"merleauponty", concept:"Being-in-the-world",             detail:"Merleau-Ponty inherits being-in-the-world but relocates it from existential structure to the lived body, giving primacy to embodied perception." },
+  { s:"heidegger",    t:"derrida",      concept:"Destruktion / trace",            detail:"Derrida radicalises Heidegger's Destruktion: there is no origin or presence, only the trace of a Being that has always already withdrawn." },
+  { s:"heidegger",    t:"arendt",       concept:"Existence and action",           detail:"Arendt was Heidegger's student. She redirects his analysis of Dasein's singularity toward political plurality — we exist as many, not as one." },
+  { s:"sartre",       t:"beauvoir",     concept:"Radical freedom (critiqued)",    detail:"Beauvoir adopts Sartre's radical freedom but critiques its abstraction: without material and social conditions, the concept of freedom is empty." },
+  { s:"merleauponty", t:"beauvoir",     concept:"Embodied subjectivity",          detail:"Beauvoir's account of woman's situation as a lived body — neither pure thing nor pure consciousness — is enriched by Merleau-Ponty's phenomenology." },
+  { s:"wittgenstein", t:"foucault",     concept:"Language games / discourse",     detail:"Foucault's 'discursive formations' echo Wittgenstein's language games: what counts as meaningful or true is constituted by rule-governed practices." },
+];
+
+// ─── SETUP ───────────────────────────────────────────────────────────────────
+const svg  = d3.select("#graph");
+const cont = document.getElementById("graph-container");
+let W = cont.clientWidth, H = cont.clientHeight;
+const root = svg.append("g");
+const zoom = d3.zoom().scaleExtent([0.25, 4])
+  .on("zoom", e => root.attr("transform", e.transform));
+svg.call(zoom);
+
+function colX(col) {
+  if (col === 0) return W * 0.055;
+  return W * (0.13 + (col - 1) / 7 * 0.855);
+}
+
+// ─── ERA BANDS ───────────────────────────────────────────────────────────────
+const eraG = root.append("g");
+function drawBands() {
+  eraG.selectAll("*").remove();
+  const breakMid = (colX(0) + colX(1)) / 2;
+  const bw = 28;
+  COLS.forEach((col, i) => {
+    let x0, x1;
+    if (i === 0)                { x0 = 0;                           x1 = breakMid - bw/2; }
+    else if (i === 1)           { x0 = breakMid + bw/2;             x1 = (colX(1)+colX(2))/2; }
+    else if (i < COLS.length-1) { x0 = (colX(i-1)+colX(i))/2;      x1 = (colX(i)+colX(i+1))/2; }
+    else                        { x0 = (colX(i-1)+colX(i))/2;       x1 = W; }
+
+    eraG.append("rect").attr("x",x0).attr("y",0)
+      .attr("width",x1-x0).attr("height",H).attr("fill",col.band);
+    if (i > 0)
+      eraG.append("line").attr("x1",x0).attr("y1",38).attr("x2",x0).attr("y2",H-20)
+        .attr("stroke","#ccc8c0").attr("stroke-width",1).attr("stroke-dasharray","3,5");
+    const lx = (x0+x1)/2;
+    eraG.append("text").attr("class","era-label").attr("x",lx).attr("y",20)
+      .attr("fill","#808098").text(col.name);
+    eraG.append("text").attr("class","era-period").attr("x",lx).attr("y",31)
+      .attr("fill","#a0a0b8").text(col.period);
+  });
+  // gap strip
+  eraG.append("rect").attr("x",breakMid-bw/2).attr("y",0)
+    .attr("width",bw).attr("height",H).attr("fill","#f5f2ed");
+  eraG.append("text").attr("x",breakMid).attr("y",H/2)
+    .attr("text-anchor","middle").attr("font-size","9px").attr("fill","#c8c0b8")
+    .attr("transform",`rotate(-90,${breakMid},${H/2})`).text("~1800 year gap~");
+}
+
+// ─── ARROWHEADS ──────────────────────────────────────────────────────────────
+const defs = svg.append("defs");
+Object.entries(T).forEach(([name, {c}]) => {
+  defs.append("marker")
+    .attr("id", `arr_${name.replace(/[\s\-]/g,"_")}`)
+    .attr("viewBox","0 -5 10 10").attr("refX",26).attr("refY",0)
+    .attr("markerWidth",5).attr("markerHeight",5).attr("orient","auto")
+    .append("path").attr("d","M0,-5L10,0L0,5")
+    .attr("fill",c).attr("fill-opacity",.55);
+});
+
+// ─── STATIC LAYOUT ───────────────────────────────────────────────────────────
+const links = INF.map(d => ({
+  ...d,
+  source: P.find(p => p.id === d.s),
+  target: P.find(p => p.id === d.t),
+}));
+
+function computePositions() {
+  const byCol = d3.group(P, d => d.col);
+  byCol.forEach(members => {
+    const n = members.length;
+    const topPad = 52, botPad = 36;
+    const spacing = (H - topPad - botPad) / (n + 1);
+    members.forEach((p, i) => {
+      p.x = colX(p.col);
+      p.y = topPad + spacing * (i + 1);
+    });
+  });
+}
+
+// ─── LINKS ───────────────────────────────────────────────────────────────────
+const linkG = root.append("g");
+const linkSel = linkG.selectAll("path").data(links).join("path")
+  .attr("class","influence-path")
+  .attr("stroke", d => T[d.source.tradition]?.c || "#888")
+  .attr("marker-end", d => `url(#arr_${d.source.tradition.replace(/[\s\-]/g,"_")})`);
+
+const elabelG = root.append("g");
+const elabels = elabelG.selectAll("text").data(links).join("text")
+  .attr("class","edge-label").text(d => d.concept);
+
+// ─── NODES ───────────────────────────────────────────────────────────────────
+const KEY = new Set(["plato","aristotle","kant","hegel","beauvoir","heidegger","nietzsche","husserl"]);
+const nodeG = root.append("g");
+const nodes = nodeG.selectAll("g").data(P).join("g")
+  .attr("class","philosopher")
+  .on("click",(ev,d)=>{ ev.stopPropagation(); select(d); });
+
+nodes.append("circle")
+  .attr("r", d => KEY.has(d.id) ? 21 : 17)
+  .attr("fill", d => (T[d.tradition]?.c || "#888") + "18")
+  .attr("stroke", d => T[d.tradition]?.c || "#888");
+
+nodes.append("text").attr("class","phil-name").attr("dy","0.35em").attr("y",-1)
+  .text(d => { const p = d.name.trim().split(/\s+/); return p[p.length-1]; });
+
+nodes.append("text").attr("class","phil-birth")
+  .attr("y", d => (KEY.has(d.id) ? 21 : 17) + 10)
+  .text(d => d.years.replace("c. ","").split("–")[0].replace(" BCE"," bc"));
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+function curve(d) {
+  const sx=d.source.x, sy=d.source.y, tx=d.target.x, ty=d.target.y;
+  const mx=(sx+tx)/2;
+  return `M${sx},${sy} C${mx},${sy} ${mx},${ty} ${tx},${ty}`;
+}
+
+function render() {
+  linkSel.attr("d", curve);
+  elabels.attr("x",d=>(d.source.x+d.target.x)/2).attr("y",d=>(d.source.y+d.target.y)/2-4);
+  nodes.attr("transform",d=>`translate(${d.x},${d.y})`);
+}
+
+// ─── SELECTION ───────────────────────────────────────────────────────────────
+svg.on("click", () => {
+  clearSel();
+  document.getElementById("sidebar").innerHTML = `<div id="ph">Select a philosopher to see their key concepts and intellectual genealogy.</div>`;
+});
+
+function select(phil) {
+  const conn = new Set([phil.id]);
+  const connLinks = new Set();
+  links.forEach((d,i) => {
+    if (d.source.id===phil.id||d.target.id===phil.id) {
+      conn.add(d.source.id); conn.add(d.target.id); connLinks.add(i);
+    }
+  });
+  nodes.select("circle")
+    .attr("fill", d => (T[d.tradition]?.c||"#888") + (conn.has(d.id)?"38":"0a"))
+    .attr("stroke-opacity", d => conn.has(d.id) ? 1 : .18);
+  nodes.select(".phil-name").attr("fill-opacity", d => conn.has(d.id) ? 1 : .2);
+  nodes.select(".phil-birth").attr("fill-opacity", d => conn.has(d.id) ? 1 : .1);
+  linkSel
+    .attr("class",(d,i)=>connLinks.has(i)?"influence-path hi":"influence-path fade")
+    .attr("stroke-opacity",(d,i)=>connLinks.has(i)?.9:.04);
+  elabels.attr("class",(d,i)=>connLinks.has(i)?"edge-label show":"edge-label");
+  renderSidebar(phil);
+}
+
+function clearSel() {
+  nodes.select("circle")
+    .attr("fill",d=>(T[d.tradition]?.c||"#888")+"18").attr("stroke-opacity",1);
+  nodes.select(".phil-name").attr("fill-opacity",1);
+  nodes.select(".phil-birth").attr("fill-opacity",1);
+  linkSel.attr("class","influence-path").attr("stroke-opacity",.32);
+  elabels.attr("class","edge-label");
+}
+
+// ─── SIDEBAR ─────────────────────────────────────────────────────────────────
+function renderSidebar(phil) {
+  const tr = T[phil.tradition]||{c:"#888",bg:"#222"};
+  const inc = links.filter(d=>d.target.id===phil.id);
+  const out = links.filter(d=>d.source.id===phil.id);
+  const inH = inc.length
+    ? inc.map(d=>`<div class="inf-item"><strong>${d.source.name}</strong>${d.concept}<em>${d.detail}</em></div>`).join("")
+    : `<div style="color:#282838;font-size:.7rem;font-style:italic">None tracked in this graph.</div>`;
+  const outH = out.length
+    ? out.map(d=>`<div class="inf-item"><strong>${d.target.name}</strong>${d.concept}<em>${d.detail}</em></div>`).join("")
+    : `<div style="color:#282838;font-size:.7rem;font-style:italic">None tracked in this graph.</div>`;
+  document.getElementById("sidebar").innerHTML = `
+    <span class="s-trad" style="background:${tr.bg};color:${tr.c}">${phil.tradition}</span>
+    <div class="s-name">${phil.name}</div>
+    <div class="s-years">${phil.years}</div>
+    <div class="s-bio">${phil.bio}</div>
+    <div class="s-h">Key Concepts</div>
+    ${phil.concepts.map(c=>`<div class="concept">${c}</div>`).join("")}
+    <div class="s-h">Influenced by</div>${inH}
+    <div class="s-h">Influenced</div>${outH}
+  `;
+}
+
+// ─── LEGEND ──────────────────────────────────────────────────────────────────
+const leg = document.getElementById("legend");
+Object.entries(T).forEach(([name,{c}]) => {
+  leg.insertAdjacentHTML("beforeend",
+    `<div class="li"><div class="ld" style="background:${c}"></div><span>${name}</span></div>`);
+});
+
+// ─── RESIZE ──────────────────────────────────────────────────────────────────
+window.addEventListener("resize", () => {
+  W = cont.clientWidth; H = cont.clientHeight;
+  drawBands();
+  computePositions();
+  render();
+});
+
+drawBands();
+computePositions();
+render();
+</script>
+</body>
+</html>
